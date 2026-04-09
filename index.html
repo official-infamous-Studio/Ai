@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infamous AI — Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--bg4:#22223a;
+  --fg:#e8e8f0;--fg2:#a0a0b8;--fg3:#6a6a80;
+  --primary:#7c5cfc;--primary2:#9b7bff;--primary-glow:rgba(124,92,252,0.25);
+  --accent:#00e5a0;--accent2:#00c488;--accent-glow:rgba(0,229,160,0.2);
+  --danger:#ff4466;--warn:#ffaa22;--success:#00e5a0;
+  --border:#2a2a3e;--radius:12px;--radius-sm:8px;
+  --sidebar-w:260px;--sidebar-collapsed:68px;
+}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+a{color:var(--primary2);text-decoration:none}
+button{cursor:pointer;font-family:inherit;border:none;outline:none}
+input{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* ===================== SCREENS ===================== */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+
+/* ===================== AUTH SCREEN ===================== */
+#authScreen{align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 0%,var(--bg3),var(--bg))}
+.auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:420px;max-width:92vw}
+.auth-box h1{font-size:28px;text-align:center;margin-bottom:6px;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-box p.sub{text-align:center;color:var(--fg2);font-size:13px;margin-bottom:28px}
+.auth-box .tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--radius-sm);padding:4px;margin-bottom:24px}
+.auth-box .tabs button{flex:1;padding:10px;border-radius:var(--radius-sm);background:transparent;color:var(--fg2);font-size:13px;font-weight:600;transition:.2s}
+.auth-box .tabs button.active{background:var(--primary);color:#fff}
+.auth-box label{display:block;font-size:12px;color:var(--fg2);margin-bottom:6px;margin-top:16px}
+.auth-box input{width:100%;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--fg);font-size:14px;transition:.2s}
+.auth-box input:focus{border-color:var(--primary)}
+.auth-box .btn-main{width:100%;padding:13px;margin-top:24px;background:linear-gradient(135deg,var(--primary),#6040e0);color:#fff;border-radius:var(--radius-sm);font-size:15px;font-weight:600;transition:.2s}
+.auth-box .btn-main:hover{opacity:.9;transform:translateY(-1px)}
+.auth-box .error{color:var(--danger);font-size:12px;margin-top:8px;text-align:center;min-height:18px}
+
+/* ===================== INFO CARD (Auth) ===================== */
+.auth-info{margin-top:24px;padding:16px;background:linear-gradient(135deg,rgba(124,92,252,0.08),rgba(0,229,160,0.06));border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center}
+.auth-info .info-title{font-size:13px;font-weight:700;color:var(--primary2);margin-bottom:6px}
+.auth-info .info-text{font-size:11px;color:var(--fg3);line-height:1.6}
+
+/* ===================== SIDEBAR LAYOUT ===================== */
+#mainScreen{flex-direction:row;height:100vh}
+
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  transition:width .3s,min-width .3s;
+  position:relative;z-index:100;
+  overflow:hidden;
+}
+.sidebar.collapsed{width:var(--sidebar-collapsed);min-width:var(--sidebar-collapsed)}
+
+.sidebar-header{
+  padding:20px 16px 16px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);min-height:64px;
+}
+.sidebar-header .logo{
+  font-size:18px;font-weight:700;white-space:nowrap;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.sidebar-header .logo-icon{font-size:22px;flex-shrink:0}
+.sidebar.collapsed .logo{display:none}
+
+.sidebar-toggle{
+  position:absolute;top:18px;right:-14px;
+  width:28px;height:28px;border-radius:50%;
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--fg2);font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:.2s;z-index:101;
+}
+.sidebar-toggle:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+.sidebar-nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:var(--radius-sm);
+  background:transparent;color:var(--fg2);
+  font-size:14px;font-weight:500;white-space:nowrap;
+  transition:.2s;width:100%;text-align:left;
+}
+.nav-item:hover{background:var(--bg3);color:var(--fg)}
+.nav-item.active{background:linear-gradient(135deg,rgba(124,92,252,0.15),rgba(124,92,252,0.05));color:var(--primary2);border-left:3px solid var(--primary)}
+.nav-item .nav-icon{font-size:18px;flex-shrink:0;width:24px;text-align:center}
+.nav-item .nav-label{overflow:hidden;text-overflow:ellipsis}
+.sidebar.collapsed .nav-label{display:none}
+.sidebar.collapsed .nav-item{justify-content:center;padding:12px 0}
+
+.sidebar-section{
+  padding:6px 14px;font-size:10px;font-weight:700;
+  color:var(--fg3);text-transform:uppercase;letter-spacing:1.2px;
+  margin-top:12px;
+}
+.sidebar.collapsed .sidebar-section{display:none}
+
+.sidebar-footer{
+  padding:12px;border-top:1px solid var(--border);
+}
+.sidebar-user{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--bg3);cursor:default;
+}
+.sidebar-user .su-avatar{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.sidebar-user .su-info{overflow:hidden}
+.sidebar-user .su-name{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user .su-email{font-size:10px;color:var(--fg3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user .su-plan{font-size:10px;color:var(--accent);font-weight:600}
+.sidebar.collapsed .su-info{display:none}
+
+.sidebar-logout{
+  width:100%;margin-top:8px;padding:8px;border-radius:var(--radius-sm);
+  background:rgba(255,68,102,0.1);color:var(--danger);
+  font-size:12px;font-weight:600;transition:.2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.sidebar-logout:hover{background:var(--danger);color:#fff}
+.sidebar.collapsed .logout-label{display:none}
+
+/* ===================== MAIN AREA ===================== */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+
+.main-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;border-bottom:1px solid var(--border);
+  background:var(--bg);min-height:60px;
+}
+.main-header h2{font-size:20px;font-weight:600}
+.main-header .header-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;background:var(--primary-glow);color:var(--primary2)}
+
+.main-content{flex:1;overflow-y:auto}
+
+/* ===================== DASHBOARD ===================== */
+.dashboard{padding:32px 28px;max-width:1100px;margin:0 auto}
+.dashboard h2{font-size:24px;margin-bottom:4px}
+.dashboard .greeting{color:var(--fg2);font-size:14px;margin-bottom:28px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:32px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;transition:.25s}
+.stat-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 8px 30px var(--primary-glow)}
+.stat-card .label{font-size:12px;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.stat-card .value{font-size:28px;font-weight:700}
+.stat-card .value.primary{color:var(--primary2)}
+.stat-card .value.accent{color:var(--accent)}
+.stat-card .value.warn{color:var(--warn)}
+.stat-card .sub{font-size:12px;color:var(--fg3);margin-top:4px}
+.quota-bar{height:6px;background:var(--bg);border-radius:3px;margin-top:10px;overflow:hidden}
+.quota-bar .fill{height:100%;border-radius:3px;transition:.4s}
+.quick-actions{display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap}
+.quick-actions button{padding:12px 24px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;transition:.2s}
+.qa-primary{background:linear-gradient(135deg,var(--primary),#6040e0);color:#fff}
+.qa-primary:hover{opacity:.9;transform:translateY(-1px)}
+.qa-secondary{background:var(--bg3);color:var(--fg);border:1px solid var(--border)}
+.qa-secondary:hover{border-color:var(--primary)}
+.section-title{font-size:16px;font-weight:600;margin-bottom:16px;color:var(--fg)}
+.chat-list{display:flex;flex-direction:column;gap:8px}
+.chat-item{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:.2s}
+.chat-item:hover{border-color:var(--primary);background:var(--bg3)}
+.chat-item .ci-left{display:flex;flex-direction:column;gap:2px}
+.chat-item .ci-title{font-size:14px;font-weight:500}
+.chat-item .ci-meta{font-size:11px;color:var(--fg3)}
+.chat-item .ci-del{padding:6px 10px;border-radius:6px;background:var(--danger);color:#fff;font-size:11px;opacity:0;transition:.2s}
+.chat-item:hover .ci-del{opacity:1}
+
+/* ===================== INFO CARD (Dashboard) ===================== */
+.info-card{background:linear-gradient(135deg,rgba(124,92,252,0.1),rgba(0,229,160,0.08));border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:32px;position:relative;overflow:hidden}
+.info-card::before{content:'';position:absolute;top:-50%;right:-50%;width:100%;height:100%;background:radial-gradient(circle,rgba(124,92,252,0.06),transparent);pointer-events:none}
+.info-card .ic-badge{display:inline-block;padding:4px 12px;border-radius:20px;background:var(--primary-glow);color:var(--primary2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.info-card h3{font-size:18px;margin-bottom:8px;background:linear-gradient(135deg,var(--primary2),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.info-card p{font-size:13px;color:var(--fg2);line-height:1.7;margin-bottom:6px}
+.info-card .ic-creator{font-size:12px;color:var(--fg3);margin-top:10px;font-style:italic}
+
+/* ===================== CHAT ===================== */
+.chat-screen{display:flex;flex-direction:column;height:100%}
+.chat-header{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--bg2)}
+.chat-header .back-btn{padding:6px 12px;border-radius:var(--radius-sm);background:var(--bg3);color:var(--fg2);font-size:13px;transition:.2s}
+.chat-header .back-btn:hover{background:var(--bg4)}
+.chat-header .chat-title{font-size:15px;font-weight:600}
+.chat-messages{flex:1;overflow-y:auto;padding:20px 24px}
+.msg{display:flex;gap:12px;margin-bottom:20px;max-width:800px;margin-left:auto;margin-right:auto}
+.msg .msg-avatar{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.msg.user .msg-avatar{background:linear-gradient(135deg,var(--primary),#6040e0);color:#fff}
+.msg.assistant .msg-avatar{background:linear-gradient(135deg,var(--accent),#00b080);color:#fff}
+.msg .msg-body{flex:1;min-width:0}
+.msg .msg-role{font-size:11px;color:var(--fg3);margin-bottom:4px;font-weight:600}
+.msg .msg-content{font-size:14px;line-height:1.7;color:var(--fg)}
+.msg .msg-content pre{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin:10px 0;overflow-x:auto;position:relative}
+.msg .msg-content code{font-family:'Fira Code',monospace;font-size:13px}
+.msg .msg-content p{margin-bottom:8px}
+.copy-btn{position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:6px;background:var(--bg3);color:var(--fg2);font-size:11px;transition:.2s}
+.copy-btn:hover{background:var(--primary);color:#fff}
+.chat-input-area{padding:16px 24px;border-top:1px solid var(--border);background:var(--bg2)}
+.chat-input-wrap{max-width:800px;margin:0 auto;display:flex;gap:8px;align-items:flex-end}
+.chat-input-wrap textarea{flex:1;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--fg);font-size:14px;resize:none;max-height:160px;min-height:44px;transition:.2s}
+.chat-input-wrap textarea:focus{border-color:var(--primary)}
+.chat-input-wrap .send-btn{padding:12px 16px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--primary),#6040e0);color:#fff;font-size:14px;font-weight:600;transition:.2s}
+.chat-input-wrap .send-btn:disabled{opacity:.3;cursor:not-allowed}
+.chat-input-wrap .send-btn:not(:disabled):hover{opacity:.9}
+.chat-quota-info{text-align:center;font-size:11px;color:var(--fg3);margin-top:8px;max-width:800px;margin-left:auto;margin-right:auto}
+.typing-indicator{display:flex;gap:4px;padding:8px 0}
+.typing-indicator span{width:6px;height:6px;border-radius:50%;background:var(--fg3);animation:blink 1.2s infinite}
+.typing-indicator span:nth-child(2){animation-delay:.2s}
+.typing-indicator span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+/* ===================== PLANS ===================== */
+.plans-page{padding:32px 28px;max-width:1100px;margin:0 auto}
+.plans-page h2{font-size:24px;margin-bottom:6px}
+.plans-page .plans-sub{color:var(--fg2);font-size:14px;margin-bottom:32px}
+.plans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.plan-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;position:relative;transition:.3s;overflow:hidden}
+.plan-card:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:0 12px 40px var(--primary-glow)}
+.plan-card.current{border-color:var(--accent)}
+.plan-card .badge{position:absolute;top:16px;right:16px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase}
+.plan-card .badge.current-badge{background:var(--accent-glow);color:var(--accent)}
+.plan-card .badge.popular-badge{background:var(--primary-glow);color:var(--primary2)}
+.plan-card .plan-icon{font-size:32px;margin-bottom:12px}
+.plan-card h3{font-size:20px;font-weight:700;margin-bottom:4px}
+.plan-card .plan-msgs{font-size:13px;color:var(--fg2);margin-bottom:16px}
+.plan-card .plan-price{font-size:28px;font-weight:700;color:var(--primary2)}
+.plan-card .plan-price-usd{font-size:13px;color:var(--fg3);margin-bottom:20px}
+.plan-card .plan-features{list-style:none;margin-bottom:24px}
+.plan-card .plan-features li{font-size:13px;color:var(--fg2);padding:4px 0;padding-left:20px;position:relative}
+.plan-card .plan-features li::before{content:'✓';position:absolute;left:0;color:var(--accent);font-weight:700}
+.plan-card .plan-btn{width:100%;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;transition:.2s}
+.plan-btn-select{background:linear-gradient(135deg,var(--primary),#6040e0);color:#fff}
+.plan-btn-select:hover{opacity:.9}
+.plan-btn-current{background:var(--bg3);color:var(--accent);cursor:default}
+
+/* ===================== QR MODAL ===================== */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:32px;max-width:420px;width:92%;text-align:center}
+.modal-box h3{font-size:20px;margin-bottom:8px}
+.modal-box p{color:var(--fg2);font-size:13px;margin-bottom:20px}
+.qr-placeholder{width:200px;height:200px;background:var(--bg);border:2px dashed var(--border);border-radius:var(--radius-sm);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:var(--fg3);font-size:13px}
+.modal-box .close-modal{padding:10px 24px;border-radius:var(--radius-sm);background:var(--bg3);color:var(--fg);font-size:14px}
+
+/* ===================== ADMIN PANEL ===================== */
+.admin-page{padding:32px 28px;max-width:1200px;margin:0 auto}
+.admin-page h2{font-size:24px;margin-bottom:24px;background:linear-gradient(135deg,var(--danger),var(--warn));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px}
+.admin-stat{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center}
+.admin-stat .as-val{font-size:32px;font-weight:700;color:var(--primary2)}
+.admin-stat .as-label{font-size:12px;color:var(--fg3);margin-top:4px}
+.admin-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--radius-sm);padding:4px;margin-bottom:24px}
+.admin-tabs button{flex:1;padding:10px 16px;border-radius:var(--radius-sm);background:transparent;color:var(--fg2);font-size:13px;font-weight:600;transition:.2s}
+.admin-tabs button.active{background:var(--primary);color:#fff}
+.users-table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.users-table th{text-align:left;padding:14px 16px;font-size:11px;color:var(--fg3);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.users-table td{padding:12px 16px;font-size:13px;color:var(--fg2);border-bottom:1px solid var(--border)}
+.users-table tr:hover td{background:var(--bg3)}
+.table-wrap{overflow-x:auto;border-radius:var(--radius);margin-bottom:24px}
+.admin-plan-select{padding:6px 10px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--fg);font-size:12px;cursor:pointer}
+.admin-plan-select:focus{border-color:var(--primary)}
+.log-entry{padding:10px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12px;color:var(--fg2);display:flex;gap:12px;align-items:center}
+.log-entry .log-time{color:var(--fg3);font-size:11px;min-width:140px;font-family:monospace}
+.log-entry .log-type{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;min-width:60px;text-align:center}
+.log-type-signup{background:rgba(0,229,160,0.15);color:var(--accent)}
+.log-type-login{background:rgba(124,92,252,0.15);color:var(--primary2)}
+.log-type-message{background:rgba(255,170,34,0.15);color:var(--warn)}
+.log-type-plan{background:rgba(255,68,102,0.15);color:var(--danger)}
+.admin-chat-viewer{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.admin-chat-viewer h4{font-size:14px;margin-bottom:12px;color:var(--fg)}
+.admin-chat-msg{padding:8px 12px;margin-bottom:6px;border-radius:var(--radius-sm);font-size:12px;line-height:1.5}
+.admin-chat-msg.user-msg{background:rgba(124,92,252,0.1);border-left:3px solid var(--primary);color:var(--fg2)}
+.admin-chat-msg.ai-msg{background:rgba(0,229,160,0.08);border-left:3px solid var(--accent);color:var(--fg2)}
+.admin-chat-msg .acm-role{font-size:10px;font-weight:700;color:var(--fg3);margin-bottom:2px}
+
+/* ===================== MOBILE OVERLAY ===================== */
+.sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:99}
+.sidebar-overlay.show{display:block}
+
+.mobile-header{
+  display:none;align-items:center;gap:12px;padding:12px 16px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+}
+.mobile-header .menu-btn{padding:8px;border-radius:var(--radius-sm);background:var(--bg3);color:var(--fg);font-size:18px}
+.mobile-header .logo{font-size:16px;font-weight:700;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ===================== RESPONSIVE ===================== */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:calc(-1 * var(--sidebar-w));transition:left .3s;z-index:200}
+  .sidebar.mobile-open{left:0}
+  .sidebar.collapsed{left:calc(-1 * var(--sidebar-collapsed))}
+  .sidebar-toggle{display:none}
+  .mobile-header{display:flex}
+  .sidebar-overlay.show{display:block}
+  .main-area{width:100%}
+  .dashboard,.plans-page,.admin-page{padding:20px 14px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .plans-grid{grid-template-columns:1fr}
+  .chat-messages{padding:14px}
+  .chat-input-area{padding:12px 14px}
+  .admin-tabs{flex-wrap:wrap}
+  .log-entry{flex-direction:column;gap:4px}
+  .log-entry .log-time{min-width:auto}
+  .auth-box{padding:24px 20px;width:100%}
+  .auth-box h1{font-size:22px}
+  .stat-card .value{font-size:22px}
+  .msg{gap:8px}
+  .msg .msg-avatar{width:28px;height:28px;font-size:12px}
+  .chat-input-wrap textarea{font-size:16px}
+  .users-table th,.users-table td{padding:8px 10px;font-size:11px}
+  .modal-box{padding:24px 18px}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr}
+  .admin-stats{grid-template-columns:1fr 1fr}
+  .quick-actions{flex-direction:column}
+  .quick-actions button{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="authScreen" class="screen active">
+  <div class="auth-box">
+    <h1>⚡ Infamous AI</h1>
+    <p class="sub">Built for developers who move fast</p>
+    <div class="tabs">
+      <button class="active" onclick="switchAuthTab('login')">Login</button>
+      <button onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div id="usernameField" style="display:none">
+        <label>Username</label>
+        <input type="text" id="authUsername" placeholder="Choose a username" autocomplete="username">
+      </div>
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" required autocomplete="email username">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" required minlength="6" autocomplete="current-password">
+      <div class="error" id="authError"></div>
+      <button type="submit" class="btn-main" id="authBtn">Login</button>
+    </form>
+    <div class="auth-info">
+      <div class="info-title">⚡ About Infamous AI</div>
+      <div class="info-text">Created & coded by <strong style="color:var(--accent)">Mikey</strong>, founder of <strong style="color:var(--primary2)">Infamous SMP</strong> & <strong style="color:var(--primary2)">Infamous Studio</strong>.<br>Making AI easy for people who want to learn coding & programming.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MAIN SCREEN (SIDEBAR LAYOUT) ===================== -->
+<div id="mainScreen" class="screen">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">‹</button>
+    <div class="sidebar-header">
+      <span class="logo-icon">⚡</span>
+      <span class="logo">Infamous AI</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Main</div>
+      <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-tab="chat" onclick="startNewChat()">
+        <span class="nav-icon">💬</span><span class="nav-label">New Chat</span>
+      </button>
+
+      <div class="sidebar-section">Account</div>
+      <button class="nav-item" data-tab="plans" onclick="switchTab('plans')">
+        <span class="nav-icon">⬆</span><span class="nav-label">Plans</span>
+      </button>
+
+      <div class="sidebar-section" id="adminSection" style="display:none">Admin</div>
+      <button class="nav-item" data-tab="admin" id="adminNavBtn" onclick="switchTab('admin')" style="display:none">
+        <span class="nav-icon">🔒</span><span class="nav-label">Admin Panel</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="su-avatar" id="sideAvatar">?</div>
+        <div class="su-info">
+          <div class="su-name" id="sideName">User</div>
+          <div class="su-email" id="sideEmail">email</div>
+          <div class="su-plan" id="sidePlan">Dirt Plan</div>
+        </div>
+      </div>
+      <button class="sidebar-logout" onclick="logout()">
+        <span>🚪</span><span class="logout-label">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <div class="mobile-header" id="mobileHeader">
+      <button class="menu-btn" onclick="openMobileSidebar()">☰</button>
+      <span class="logo">⚡ Infamous AI</span>
+    </div>
+
+    <div class="main-content" id="mainContent">
+
+      <!-- DASHBOARD TAB -->
+      <div id="tab-dashboard" class="tab-content">
+        <div class="main-header">
+          <h2 id="dashHeaderTitle">Dashboard</h2>
+          <span class="header-badge" id="dashPlanBadge">Dirt Plan</span>
+        </div>
+        <div class="dashboard">
+          <div class="info-card">
+            <div class="ic-badge">About Infamous AI</div>
+            <h3>⚡ Intelligent Assistant for Developers</h3>
+            <p>Infamous AI is a fast, intelligent assistant that helps with coding (Java, Python, Minecraft plugins, web dev) and handles all topics: science, math, writing, creative work, and everyday questions.</p>
+            <p>Purpose: To make AI easy and accessible for people who want to learn coding and programming.</p>
+            <div class="ic-creator">Created & coded by Mikey — Founder of Infamous SMP & Infamous Studio</div>
+          </div>
+
+          <h2 id="dashGreeting">Welcome back</h2>
+          <p class="greeting" id="dashSub">Here's your activity overview</p>
+          <div class="stats-grid" id="statsGrid"></div>
+          <div class="quick-actions">
+            <button class="qa-primary" onclick="startNewChat()">➕ Start New Chat</button>
+            <button class="qa-secondary" onclick="switchTab('plans')">⬆ Upgrade Plan</button>
+          </div>
+          <h3 class="section-title">Recent Chats</h3>
+          <div class="chat-list" id="chatList"></div>
+        </div>
+      </div>
+
+      <!-- CHAT TAB -->
+      <div id="tab-chat" class="tab-content" style="display:none">
+        <div class="chat-screen" id="chatScreen">
+          <div class="chat-header">
+            <button class="back-btn" onclick="switchTab('dashboard')">← Back</button>
+            <div class="chat-title" id="chatTitleBar">New Chat</div>
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-area">
+            <div class="chat-input-wrap">
+              <textarea id="chatInput" rows="1" placeholder="Ask Infamous AI anything..." onkeydown="handleChatKey(event)" oninput="autoGrow(this)"></textarea>
+              <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+            <div class="chat-quota-info" id="quotaInfo"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLANS TAB -->
+      <div id="tab-plans" class="tab-content" style="display:none">
+        <div class="main-header">
+          <h2>Plans & Pricing</h2>
+        </div>
+        <div class="plans-page">
+          <h2>Choose Your Plan</h2>
+          <p class="plans-sub">Unlock more power with higher tiers</p>
+          <div class="plans-grid" id="plansGrid"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB -->
+      <div id="tab-admin" class="tab-content" style="display:none">
+        <div class="main-header">
+          <h2>🔒 Admin Panel</h2>
+        </div>
+        <div class="admin-page">
+          <h2>🔒 Admin Control Panel</h2>
+          <div class="admin-stats" id="adminStats"></div>
+          <div class="admin-tabs">
+            <button class="active" onclick="switchAdminTab('users')">👥 Users</button>
+            <button onclick="switchAdminTab('chats')">💬 Chat Console</button>
+            <button onclick="switchAdminTab('logs')">📋 Activity Logs</button>
+          </div>
+          <div id="adminTab-users">
+            <h3 class="section-title">All Users — Manage Plans & View Details</h3>
+            <div class="table-wrap">
+              <table class="users-table">
+                <thead><tr><th>Username</th><th>Email</th><th>Plan</th><th>Change Plan</th><th>Msgs Today</th><th>Total Chats</th><th>Total Msgs</th><th>Joined</th></tr></thead>
+                <tbody id="adminUsersBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="adminTab-chats" style="display:none">
+            <h3 class="section-title">All User Chats — Console View</h3>
+            <div id="adminChatsContainer"></div>
+          </div>
+          <div id="adminTab-logs" style="display:none">
+            <h3 class="section-title">Activity Logs — Signups, Logins, Messages, Plan Changes</h3>
+            <div id="adminLogsContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-box">
+    <h3 id="qrPlanName">Upgrade Plan</h3>
+    <p id="qrPlanPrice">Scan to pay</p>
+    <div class="qr-placeholder" id="qrImage">QR Code<br>Coming Soon</div>
+    <p style="font-size:11px;color:var(--fg3);margin-bottom:16px">After payment, your plan will be activated manually by admin.</p>
+    <button class="close-modal" onclick="closeQR()">Close</button>
+  </div>
+</div>
+<script>
+const _API_BASE=(function(){
+  const id='pwmvfujxrfzzvsvnkkax';
+  return 'https://'+id+'.supabase.co';
+})();
+const _AK=(function(){
+  const p=['eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9','eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3bXZmdWp4cmZ6enZzdm5ra2F4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MjcwMTMsImV4cCI6MjA5MDEwMzAxM30','PCBsHT-D0MTREOf3zdw2ICxQoHnLa6Ax4rZfvIEVlcA'];
+  return p.join('.');
+})();
+
+let _sessionToken = null;
+
+/* ===================== SECTION: BACKEND API HELPERS ===================== */
+const _H = () => ({ 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _AK, 'apikey': _AK });
+
+async function parseApiResponse(res, fallbackMessage) {
+  const text = await res.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { error: text || fallbackMessage };
+  }
+  if (!res.ok) throw new Error(data.error || fallbackMessage);
+  return data;
+}
+
+async function apiAuth(action, email, password, username) {
+  const res = await fetch(_API_BASE + '/functions/v1/iai-auth', {
+    method: 'POST', headers: _H(),
+    body: JSON.stringify({ action, email, password, username, sessionToken: _sessionToken }),
+  });
+  return parseApiResponse(res, 'Auth error');
+}
+
+async function apiData(action, extra = {}) {
+  const res = await fetch(_API_BASE + '/functions/v1/iai-data', {
+    method: 'POST', headers: _H(),
+    body: JSON.stringify({ action, sessionToken: _sessionToken, ...extra }),
+  });
+  try {
+    return await parseApiResponse(res, 'Data error');
+  } catch (error) {
+    if (res.status === 401) { logout(); throw new Error('Session expired'); }
+    throw error;
+  }
+}
+
+async function apiAdmin(action, extra = {}) {
+  const res = await fetch(_API_BASE + '/functions/v1/iai-admin', {
+    method: 'POST', headers: _H(),
+    body: JSON.stringify({ action, sessionToken: _sessionToken, ...extra }),
+  });
+  try {
+    return await parseApiResponse(res, 'Admin error');
+  } catch (error) {
+    if (res.status === 401) { logout(); throw new Error('Session expired'); }
+    throw error;
+  }
+}
+
+/* ===================== SECTION: PLANS DATA ===================== */
+const PLANS = [
+  { id: 'dirt', name: 'Dirt', icon: '🟫', msgs: 25, inr: 00, usd: 000, features: ['25 messages/day', 'Basic AI responses', '1 chat at a time', 'Community support'], popular: false },
+  { id: 'stone', name: 'Stone', icon: '🪨', msgs: 50, inr: 49, usd: 0.53, features: ['50 messages/day', 'Faster responses', '5 chats', 'Code highlighting', 'Priority queue'], popular: true },
+  { id: 'obsidian', name: 'Obsidian', icon: '🖤', msgs: 80, inr: 99, usd: 1.08, features: ['80 messages/day', 'Advanced code gen', '15 chats', 'Export chats', 'Priority support'], popular: false },
+  { id: 'bedrock', name: 'Bedrock', icon: '💎', msgs: 150, inr: 199, usd: 2.16, features: ['150 messages/day', 'Unlimited chats', 'GPT-level answers', 'API access', '24/7 support', 'Early features'], popular: false }
+];
+
+/* ===================== SECTION: STATE ===================== */
+let currentUser = null, currentChatId = null, authMode = 'login', adminSubTab = 'users', sidebarCollapsed = false, isStreaming = false;
+
+function getChatUrl() {
+  return _API_BASE + '/functions/v1/chat';
+}
+
+async function requestChat(messages) {
+  const payload = JSON.stringify({ messages, sessionToken: _sessionToken });
+  const res = await fetch(getChatUrl(), {
+    method: 'POST',
+    headers: _H(),
+    cache: 'no-store',
+    body: payload,
+  });
+  if (!res.ok) { const msg = await res.text().catch(() => ''); throw new Error(msg || ('API error ' + res.status)); }
+  if (!res.body) throw new Error('Empty AI response');
+  return res;
+}
+
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+
+/* ===================== SECTION: SIDEBAR ===================== */
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+  document.getElementById('sidebarToggle').textContent = sidebarCollapsed ? '›' : '‹';
+}
+function openMobileSidebar() {
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('sidebarOverlay').classList.add('show');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+/* ===================== SECTION: AUTH (via Backend) ===================== */
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-box .tabs button').forEach((b, i) => b.classList.toggle('active', i === (mode === 'login' ? 0 : 1)));
+  document.getElementById('usernameField').style.display = mode === 'signup' ? 'block' : 'none';
+  document.getElementById('authBtn').textContent = mode === 'login' ? 'Login' : 'Sign Up';
+  document.getElementById('authError').textContent = '';
+}
+
+async function handleAuth(e) {
+  e.preventDefault();
+  const email = document.getElementById('authEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('authPassword').value;
+  const uname = document.getElementById('authUsername').value.trim();
+  const err = document.getElementById('authError');
+  const btn = document.getElementById('authBtn');
+  err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Please wait...';
+
+  try {
+    if (authMode === 'signup' && !uname) throw new Error('Username required');
+    if (pass.length < 6) throw new Error('Password must be at least 6 characters');
+
+    if (authMode === 'signup') {
+      const data = await apiAuth('signup', email, pass, uname);
+      _sessionToken = data.sessionToken;
+      loginAs(data.user);
+    } else {
+      const data = await apiAuth('login', email, pass);
+      _sessionToken = data.sessionToken;
+      loginAs(data.user);
+    }
+  } catch (ex) {
+    console.error(ex);
+    err.textContent = ex.message || 'Connection error. Please try again.';
+  } finally {
+    if (!currentUser) {
+      btn.disabled = false;
+      btn.textContent = authMode === 'login' ? 'Login' : 'Sign Up';
+    }
+  }
+}
+
+function loginAs(user) {
+  currentUser = user;
+  localStorage.setItem('iai_session', JSON.stringify({ token: _sessionToken }));
+  // Admin UI — only show if server says isAdmin
+  const adminBtn = document.getElementById('adminNavBtn');
+  const adminSection = document.getElementById('adminSection');
+  if (adminBtn) adminBtn.style.display = user.isAdmin === true ? 'flex' : 'none';
+  if (adminSection) adminSection.style.display = user.isAdmin === true ? '' : 'none';
+  showMain();
+}
+
+function logout() {
+  if (_sessionToken) {
+    fetch(_API_BASE + '/functions/v1/iai-auth', {
+      method: 'POST', headers: _H(),
+      body: JSON.stringify({ action: 'logout', sessionToken: _sessionToken }),
+    }).catch(() => {});
+  }
+  currentUser = null; currentChatId = null; _sessionToken = null;
+  localStorage.removeItem('iai_session');
+  document.getElementById('authScreen').classList.add('active');
+  document.getElementById('mainScreen').classList.remove('active');
+  document.getElementById('authEmail').value = '';
+  document.getElementById('authPassword').value = '';
+  document.getElementById('authUsername').value = '';
+  switchAuthTab('login');
+  document.getElementById('authBtn').disabled = false;
+  document.getElementById('authBtn').textContent = 'Login';
+  closeMobileSidebar();
+}
+
+async function checkSession() {
+  const s = localStorage.getItem('iai_session');
+  if (!s) return;
+  try {
+    const parsed = JSON.parse(s);
+    if (!parsed.token) { localStorage.removeItem('iai_session'); return; }
+    _sessionToken = parsed.token;
+    const data = await apiAuth('session', '', '');
+    if (data.success) loginAs(data.user);
+    else { _sessionToken = null; localStorage.removeItem('iai_session'); }
+  } catch (e) {
+    console.error('Session check failed:', e);
+    _sessionToken = null;
+    localStorage.removeItem('iai_session');
+  }
+}
+
+/* ===================== SECTION: MAIN NAVIGATION ===================== */
+function showMain() {
+  document.getElementById('authScreen').classList.remove('active');
+  document.getElementById('mainScreen').classList.add('active');
+  updateUserUI();
+  switchTab('dashboard');
+}
+
+function switchTab(tab) {
+  if (tab === 'admin' && (!currentUser || !currentUser.isAdmin)) return;
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = '';
+  document.querySelectorAll('.nav-item[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'plans') renderPlans();
+  if (tab === 'admin') renderAdmin();
+  if (tab === 'chat' && !currentChatId) startNewChat();
+  closeMobileSidebar();
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  const init = currentUser.username.charAt(0).toUpperCase();
+  document.getElementById('sideAvatar').textContent = init;
+  document.getElementById('sideName').textContent = currentUser.username;
+  document.getElementById('sideEmail').textContent = currentUser.email;
+  const plan = PLANS.find(p => p.id === currentUser.plan) || PLANS[0];
+  document.getElementById('sidePlan').textContent = plan.icon + ' ' + plan.name + ' • ' + getMsgRemaining() + ' msgs left';
+  document.getElementById('dashPlanBadge').textContent = plan.icon + ' ' + plan.name + ' Plan';
+}
+
+/* ===================== SECTION: DASHBOARD ===================== */
+function getMsgsToday() {
+  if (!currentUser) return 0;
+  return (currentUser.msgLog[todayKey()] || 0);
+}
+function getMsgRemaining() {
+  const plan = PLANS.find(p => p.id === currentUser.plan) || PLANS[0];
+  return Math.max(0, plan.msgs - getMsgsToday());
+}
+
+async function renderDashboard() {
+  if (!currentUser) return;
+  document.getElementById('dashGreeting').textContent = 'Welcome back, ' + currentUser.username + '!';
+  document.getElementById('dashHeaderTitle').textContent = 'Dashboard';
+  const plan = PLANS.find(p => p.id === currentUser.plan) || PLANS[0];
+  const used = getMsgsToday(), rem = getMsgRemaining(), pct = plan.msgs ? Math.round(used / plan.msgs * 100) : 0;
+
+  let totalChats = 0, totalMsgs = 0;
+  try {
+    const stats = await apiData('get_stats');
+    totalChats = stats.totalChats || 0;
+    totalMsgs = stats.totalMsgs || 0;
+    if (stats.msgLog) currentUser.msgLog = stats.msgLog;
+  } catch (e) { console.error(e); }
+
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = `
+    <div class="stat-card"><div class="label">Messages Today</div><div class="value primary">${used}</div><div class="sub">of ${plan.msgs} limit</div><div class="quota-bar"><div class="fill" style="width:${pct}%;background:${pct > 80 ? 'var(--danger)' : pct > 50 ? 'var(--warn)' : 'var(--accent)'}"></div></div></div>
+    <div class="stat-card"><div class="label">Remaining Today</div><div class="value accent">${rem}</div><div class="sub">messages available</div></div>
+    <div class="stat-card"><div class="label">Total Chats</div><div class="value">${totalChats}</div></div>
+    <div class="stat-card"><div class="label">Current Plan</div><div class="value warn">${plan.icon} ${plan.name}</div><div class="sub">₹${plan.inr}/mo • $${plan.usd}/mo</div></div>
+  `;
+  renderChatList();
+}
+
+async function renderChatList() {
+  const list = document.getElementById('chatList');
+  try {
+    const chats = await apiData('get_chats');
+    if (!chats.length) { list.innerHTML = '<p style="color:var(--fg3);font-size:13px">No chats yet. Start one!</p>'; return; }
+
+    const now = new Date(), todayStr = todayKey();
+    const yest = new Date(now); yest.setDate(yest.getDate() - 1); const yestStr = yest.toISOString().slice(0, 10);
+    const groups = { Today: [], Yesterday: [], Previous: [] };
+    chats.forEach(c => {
+      const d = c.updated_at.slice(0, 10);
+      if (d === todayStr) groups.Today.push(c);
+      else if (d === yestStr) groups.Yesterday.push(c);
+      else groups.Previous.push(c);
+    });
+
+    let html = '';
+    for (const [label, gchats] of Object.entries(groups)) {
+      if (!gchats.length) continue;
+      html += `<p style="font-size:11px;color:var(--fg3);margin:12px 0 6px;text-transform:uppercase;letter-spacing:1px">${label}</p>`;
+      gchats.forEach(c => {
+        html += `<div class="chat-item" onclick="openChat('${c.id}')"><div class="ci-left"><div class="ci-title">${esc(c.title)}</div><div class="ci-meta">Chat</div></div><button class="ci-del" onclick="event.stopPropagation();deleteChat('${c.id}')">Delete</button></div>`;
+      });
+    }
+    list.innerHTML = html;
+  } catch (e) { console.error(e); list.innerHTML = '<p style="color:var(--fg3)">Error loading chats</p>'; }
+}
+
+/* ===================== SECTION: CHAT SYSTEM ===================== */
+async function startNewChat() {
+  const id = 'chat_' + Date.now();
+  try {
+    await apiData('create_chat', { chatId: id, title: 'New Chat' });
+  } catch (e) { console.error(e); }
+  currentChatId = id;
+  switchTab('chat');
+  renderChat();
+}
+
+function openChat(id) {
+  currentChatId = id;
+  switchTab('chat');
+  renderChat();
+}
+
+async function deleteChat(id) {
+  if (!confirm('Delete this chat?')) return;
+  try {
+    await apiData('delete_chat', { chatId: id });
+  } catch (e) { console.error(e); }
+  if (currentChatId === id) currentChatId = null;
+  renderDashboard();
+}
+
+async function renderChat() {
+  if (!currentChatId) return;
+  try {
+    const data = await apiData('get_messages', { chatId: currentChatId });
+    document.getElementById('chatTitleBar').textContent = data.chat.title;
+
+    const container = document.getElementById('chatMessages');
+    const plan = PLANS.find(p => p.id === currentUser.plan) || PLANS[0];
+    document.getElementById('quotaInfo').textContent = `${plan.icon} ${plan.name} Plan • ${getMsgRemaining()} of ${plan.msgs} messages remaining today`;
+
+    let html = '';
+    data.messages.forEach(m => {
+      const parsed = m.role === 'assistant' ? renderMD(m.content) : esc(m.content);
+      html += `<div class="msg ${m.role}"><div class="msg-avatar">${m.role === 'user' ? '👤' : '⚡'}</div><div class="msg-body"><div class="msg-role">${m.role === 'user' ? 'You' : 'Infamous AI'}</div><div class="msg-content">${parsed}</div></div></div>`;
+    });
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+    addCopyButtons();
+  } catch (e) { console.error(e); }
+}
+
+function handleChatKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 160) + 'px'; }
+
+function setStreamingState(streaming) {
+  isStreaming = streaming;
+  const btn = document.getElementById('sendBtn');
+  const input = document.getElementById('chatInput');
+  btn.disabled = streaming;
+  btn.textContent = streaming ? '⏳ Wait...' : 'Send';
+  input.disabled = streaming;
+  if (streaming) input.style.opacity = '0.5';
+  else { input.style.opacity = '1'; input.focus(); }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || isStreaming) return;
+  if (getMsgRemaining() <= 0) { alert('Daily message limit reached! Upgrade your plan.'); return; }
+
+  setStreamingState(true);
+
+  try {
+    const result = await apiData('send_message', { chatId: currentChatId, content: text });
+    currentUser.msgLog = currentUser.msgLog || {};
+    currentUser.msgLog[todayKey()] = result.msgsUsed || ((currentUser.msgLog[todayKey()] || 0) + 1);
+  } catch (e) {
+    console.error(e);
+    if (e.message.includes('limit')) { alert(e.message); setStreamingState(false); return; }
+  }
+
+  input.value = ''; input.style.height = 'auto';
+  await renderChat();
+
+  const container = document.getElementById('chatMessages');
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg assistant'; typingDiv.id = 'typing-msg';
+  typingDiv.innerHTML = '<div class="msg-avatar">⚡</div><div class="msg-body"><div class="msg-role">Infamous AI</div><div class="msg-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div></div>';
+  container.appendChild(typingDiv);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const allMsgs = await apiData('get_chat_history', { chatId: currentChatId });
+    const res = await requestChat(allMsgs);
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let assistant = '';
+
+    const placeholder = await apiData('create_ai_placeholder', { chatId: currentChatId });
+    const assistantMsgId = placeholder.msgId;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = dec.decode(value);
+      for (const line of chunk.split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        const d = line.slice(6).trim();
+        if (d === '[DONE]') continue;
+        try { const j = JSON.parse(d); const delta = j.choices?.[0]?.delta?.content; if (delta) assistant += delta; } catch { }
+      }
+      const typEl = document.getElementById('typing-msg');
+      if (typEl) {
+        const contentEl = typEl.querySelector('.msg-content');
+        if (contentEl) contentEl.innerHTML = renderMD(assistant);
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    await apiData('save_ai_response', { chatId: currentChatId, msgId: assistantMsgId, content: assistant || 'No response generated.' });
+  } catch (err) {
+    const msg = err instanceof Error && err.message ? err.message : 'Please try again.';
+    try { await apiData('save_ai_response', { chatId: currentChatId, content: 'Sorry, I could not reach the AI right now. ' + msg }); } catch (e2) { console.error(e2); }
+  }
+  await renderChat();
+  setStreamingState(false);
+  updateUserUI();
+}
+
+/* ===================== SECTION: PLANS ===================== */
+function renderPlans() {
+  const grid = document.getElementById('plansGrid');
+  grid.innerHTML = PLANS.map(p => {
+    const isCurrent = currentUser.plan === p.id;
+    const badge = isCurrent ? '<div class="badge current-badge">Current</div>' : p.popular ? '<div class="badge popular-badge">Popular</div>' : '';
+    return `<div class="plan-card ${isCurrent ? 'current' : ''}">
+      ${badge}
+      <div class="plan-icon">${p.icon}</div>
+      <h3>${p.name}</h3>
+      <div class="plan-msgs">${p.msgs} messages/day</div>
+      <div class="plan-price">₹${p.inr}<span style="font-size:14px;color:var(--fg3)">/mo</span></div>
+      <div class="plan-price-usd">~$${p.usd}/mo</div>
+      <ul class="plan-features">${p.features.map(f => '<li>' + f + '</li>').join('')}</ul>
+      <button class="plan-btn ${isCurrent ? 'plan-btn-current' : 'plan-btn-select'}" ${isCurrent ? 'disabled' : 'onclick="showQR(\'' + p.id + '\')"'}>${isCurrent ? '✓ Current Plan' : 'Select Plan'}</button>
+    </div>`;
+  }).join('');
+}
+
+function showQR(planId) {
+  const plan = PLANS.find(p => p.id === planId);
+  document.getElementById('qrPlanName').textContent = 'Upgrade to ' + plan.name;
+  document.getElementById('qrPlanPrice').textContent = `Pay ₹${plan.inr} (~$${plan.usd}) to upgrade`;
+  document.getElementById('qrModal').classList.add('show');
+}
+function closeQR() { document.getElementById('qrModal').classList.remove('show'); }
+
+/* ===================== SECTION: ADMIN PANEL (Server-validated) ===================== */
+function switchAdminTab(tab) {
+  adminSubTab = tab;
+  document.querySelectorAll('.admin-tabs button').forEach((b, i) => {
+    const tabs = ['users', 'chats', 'logs'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  ['users', 'chats', 'logs'].forEach(t => {
+    document.getElementById('adminTab-' + t).style.display = t === tab ? '' : 'none';
+  });
+  renderAdmin();
+}
+
+async function renderAdmin() {
+  if (!currentUser || !currentUser.isAdmin) return;
+
+  try {
+    const data = await apiAdmin('get_all_data');
+    const { users: allUsers, chats: allChats, messages: allMessages, logs } = data;
+
+    const totalMsgsAll = allMessages.length;
+    const totalMsgsToday = allUsers.reduce((s, u) => s + ((u.msg_log || {})[todayKey()] || 0), 0);
+    const totalChatsAll = allChats.length;
+
+    document.getElementById('adminStats').innerHTML = `
+      <div class="admin-stat"><div class="as-val">${allUsers.length}</div><div class="as-label">Total Users</div></div>
+      <div class="admin-stat"><div class="as-val">${totalMsgsToday}</div><div class="as-label">Msgs Today</div></div>
+      <div class="admin-stat"><div class="as-val">${totalChatsAll}</div><div class="as-label">Total Chats</div></div>
+      <div class="admin-stat"><div class="as-val">${totalMsgsAll}</div><div class="as-label">Total Messages</div></div>
+      ${PLANS.map(p => { const c = allUsers.filter(u => u.plan === p.id).length; return `<div class="admin-stat"><div class="as-val">${c}</div><div class="as-label">${p.icon} ${p.name}</div></div>`; }).join('')}
+    `;
+
+    document.getElementById('adminUsersBody').innerHTML = allUsers.map(u => {
+      const userChats = allChats.filter(c => c.user_email === u.email);
+      const userMsgs = allMessages.filter(m => userChats.some(c => c.id === m.chat_id));
+      const plan = PLANS.find(p => p.id === u.plan) || PLANS[0];
+      const joined = u.created_at ? new Date(u.created_at).toLocaleDateString() : 'N/A';
+      const msgsToday = (u.msg_log || {})[todayKey()] || 0;
+      const planOptions = PLANS.map(p => `<option value="${p.id}" ${p.id === u.plan ? 'selected' : ''}>${p.icon} ${p.name}</option>`).join('');
+      return `<tr>
+        <td><strong>${esc(u.username)}</strong></td>
+        <td>${esc(u.email)}</td>
+        <td>${plan.icon} ${plan.name}</td>
+        <td><select class="admin-plan-select" onchange="adminChangePlan('${u.email}',this.value)">${planOptions}</select></td>
+        <td>${msgsToday}/${plan.msgs}</td>
+        <td>${userChats.length}</td>
+        <td>${userMsgs.length}</td>
+        <td>${joined}</td>
+      </tr>`;
+    }).join('');
+
+    const chatsContainer = document.getElementById('adminChatsContainer');
+    let chatsHtml = '';
+    allUsers.forEach(u => {
+      const userChats = allChats.filter(c => c.user_email === u.email);
+      if (!userChats.length) return;
+      userChats.forEach(chat => {
+        const chatMsgs = allMessages.filter(m => m.chat_id === chat.id);
+        if (!chatMsgs.length) return;
+        chatsHtml += `<div class="admin-chat-viewer">
+          <h4>👤 ${esc(u.username)} — "${esc(chat.title)}" <span style="font-size:11px;color:var(--fg3);font-weight:400">(${chatMsgs.length} msgs)</span></h4>`;
+        chatMsgs.forEach(m => {
+          const cls = m.role === 'user' ? 'user-msg' : 'ai-msg';
+          const role = m.role === 'user' ? u.username : 'Infamous AI';
+          chatsHtml += `<div class="admin-chat-msg ${cls}"><div class="acm-role">${esc(role)}</div>${esc(m.content).slice(0, 300)}${m.content.length > 300 ? '...' : ''}</div>`;
+        });
+        chatsHtml += `</div>`;
+      });
+    });
+    chatsContainer.innerHTML = chatsHtml || '<p style="color:var(--fg3);font-size:13px">No chats yet.</p>';
+
+    const logsContainer = document.getElementById('adminLogsContainer');
+    if (!logs.length) { logsContainer.innerHTML = '<p style="color:var(--fg3);font-size:13px">No activity yet.</p>'; return; }
+    logsContainer.innerHTML = logs.map(l => {
+      const time = new Date(l.created_at).toLocaleString();
+      const typeClass = { 'signup': 'log-type-signup', 'login': 'log-type-login', 'message': 'log-type-message', 'plan': 'log-type-plan' }[l.type] || '';
+      return `<div class="log-entry"><span class="log-time">${time}</span><span class="log-type ${typeClass}">${l.type}</span><span><strong>${esc(l.username)}</strong> — ${esc(l.detail)}</span></div>`;
+    }).join('');
+
+  } catch (e) {
+    console.error('Admin render error:', e);
+    document.getElementById('adminStats').innerHTML = '<p style="color:var(--danger)">Access denied or error loading admin data.</p>';
+  }
+}
+
+async function adminChangePlan(email, newPlan) {
+  if (!currentUser || !currentUser.isAdmin) return;
+  try {
+    await apiAdmin('change_plan', { targetEmail: email, newPlan });
+    if (currentUser.email === email) { currentUser.plan = newPlan; updateUserUI(); }
+    renderAdmin();
+  } catch (e) { console.error(e); alert('Failed to change plan: ' + e.message); }
+}
+
+/* ===================== SECTION: UTILS ===================== */
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function renderMD(text) {
+  try {
+    marked.setOptions({ highlight: (code, lang) => { try { return lang ? hljs.highlight(code, { language: lang }).value : hljs.highlightAuto(code).value } catch { return code } } });
+    return marked.parse(text);
+  } catch { return esc(text); }
+}
+
+function addCopyButtons() {
+  document.querySelectorAll('.msg-content pre').forEach(pre => {
+    if (pre.querySelector('.copy-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn'; btn.textContent = 'Copy';
+    btn.onclick = () => { navigator.clipboard.writeText(pre.textContent.replace('Copy', '').trim()); btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); };
+    pre.style.position = 'relative'; pre.appendChild(btn);
+  });
+}
+
+/* ===================== SECTION: INIT ===================== */
+checkSession();
+</script>
+
+</body>
+</html>
