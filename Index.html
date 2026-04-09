@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infamous AI — Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="infamous-ai.css">
+</head>
+<body>
+
+<!-- ===================== AUTH SCREEN ===================== -->
+<div id="authScreen" class="screen active">
+  <div class="auth-box">
+    <h1>⚡ Infamous AI</h1>
+    <p class="sub">Built for developers who move fast</p>
+    <div class="tabs">
+      <button class="active" onclick="switchAuthTab('login')">Login</button>
+      <button onclick="switchAuthTab('signup')">Sign Up</button>
+    </div>
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div id="usernameField" style="display:none">
+        <label>Username</label>
+        <input type="text" id="authUsername" placeholder="Choose a username" autocomplete="username">
+      </div>
+      <label>Email</label>
+      <input type="email" id="authEmail" placeholder="you@example.com" required autocomplete="email username">
+      <label>Password</label>
+      <input type="password" id="authPassword" placeholder="••••••••" required minlength="6" autocomplete="current-password">
+      <div class="error" id="authError"></div>
+      <button type="submit" class="btn-main" id="authBtn">Login</button>
+    </form>
+    <div class="auth-info">
+      <div class="info-title">⚡ About Infamous AI</div>
+      <div class="info-text">Created & coded by <strong style="color:var(--accent)">Mikey</strong>, founder of <strong style="color:var(--primary2)">Infamous SMP</strong> & <strong style="color:var(--primary2)">Infamous Studio</strong>.<br>Making AI easy for people who want to learn coding & programming.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MAIN SCREEN (SIDEBAR LAYOUT) ===================== -->
+<div id="mainScreen" class="screen">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar">‹</button>
+    <div class="sidebar-header">
+      <span class="logo-icon">⚡</span>
+      <span class="logo">Infamous AI</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Main</div>
+      <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+      </button>
+      <button class="nav-item" data-tab="chat" onclick="startNewChat()">
+        <span class="nav-icon">💬</span><span class="nav-label">New Chat</span>
+      </button>
+
+      <div class="sidebar-section">Account</div>
+      <button class="nav-item" data-tab="plans" onclick="switchTab('plans')">
+        <span class="nav-icon">⬆</span><span class="nav-label">Plans</span>
+      </button>
+
+      <div class="sidebar-section" id="adminSection" style="display:none">Admin</div>
+      <button class="nav-item" data-tab="admin" id="adminNavBtn" onclick="switchTab('admin')" style="display:none">
+        <span class="nav-icon">🔒</span><span class="nav-label">Admin Panel</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="su-avatar" id="sideAvatar">?</div>
+        <div class="su-info">
+          <div class="su-name" id="sideName">User</div>
+          <div class="su-email" id="sideEmail">email</div>
+          <div class="su-plan" id="sidePlan">Dirt Plan</div>
+        </div>
+      </div>
+      <button class="sidebar-logout" onclick="logout()">
+        <span>🚪</span><span class="logout-label">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <div class="mobile-header" id="mobileHeader">
+      <button class="menu-btn" onclick="openMobileSidebar()">☰</button>
+      <span class="logo">⚡ Infamous AI</span>
+    </div>
+
+    <div class="main-content" id="mainContent">
+
+      <!-- DASHBOARD TAB -->
+      <div id="tab-dashboard" class="tab-content">
+        <div class="main-header">
+          <h2 id="dashHeaderTitle">Dashboard</h2>
+          <span class="header-badge" id="dashPlanBadge">Dirt Plan</span>
+        </div>
+        <div class="dashboard">
+          <div class="info-card">
+            <div class="ic-badge">About Infamous AI</div>
+            <h3>⚡ Intelligent Assistant for Developers</h3>
+            <p>Infamous AI is a fast, intelligent assistant that helps with coding (Java, Python, Minecraft plugins, web dev) and handles all topics: science, math, writing, creative work, and everyday questions.</p>
+            <p>Purpose: To make AI easy and accessible for people who want to learn coding and programming.</p>
+            <div class="ic-creator">Created & coded by Mikey — Founder of Infamous SMP & Infamous Studio</div>
+          </div>
+
+          <h2 id="dashGreeting">Welcome back</h2>
+          <p class="greeting" id="dashSub">Here's your activity overview</p>
+          <div class="stats-grid" id="statsGrid"></div>
+          <div class="quick-actions">
+            <button class="qa-primary" onclick="startNewChat()">➕ Start New Chat</button>
+            <button class="qa-secondary" onclick="switchTab('plans')">⬆ Upgrade Plan</button>
+          </div>
+          <h3 class="section-title">Recent Chats</h3>
+          <div class="chat-list" id="chatList"></div>
+        </div>
+      </div>
+
+      <!-- CHAT TAB -->
+      <div id="tab-chat" class="tab-content" style="display:none">
+        <div class="chat-screen" id="chatScreen">
+          <div class="chat-header">
+            <button class="back-btn" onclick="switchTab('dashboard')">← Back</button>
+            <div class="chat-title" id="chatTitleBar">New Chat</div>
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-area">
+            <div class="chat-input-wrap">
+              <textarea id="chatInput" rows="1" placeholder="Ask Infamous AI anything..." onkeydown="handleChatKey(event)" oninput="autoGrow(this)"></textarea>
+              <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+            <div class="chat-quota-info" id="quotaInfo"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLANS TAB -->
+      <div id="tab-plans" class="tab-content" style="display:none">
+        <div class="main-header">
+          <h2>Plans & Pricing</h2>
+        </div>
+        <div class="plans-page">
+          <h2>Choose Your Plan</h2>
+          <p class="plans-sub">Unlock more power with higher tiers</p>
+          <div class="plans-grid" id="plansGrid"></div>
+        </div>
+      </div>
+
+      <!-- ADMIN TAB -->
+      <div id="tab-admin" class="tab-content" style="display:none">
+        <div class="main-header">
+          <h2>🔒 Admin Panel</h2>
+        </div>
+        <div class="admin-page">
+          <h2>🔒 Admin Control Panel</h2>
+          <div class="admin-stats" id="adminStats"></div>
+          <div class="admin-tabs">
+            <button class="active" onclick="switchAdminTab('users')">👥 Users</button>
+            <button onclick="switchAdminTab('chats')">💬 Chat Console</button>
+            <button onclick="switchAdminTab('logs')">📋 Activity Logs</button>
+          </div>
+          <div id="adminTab-users">
+            <h3 class="section-title">All Users — Manage Plans & View Details</h3>
+            <div class="table-wrap">
+              <table class="users-table">
+                <thead><tr><th>Username</th><th>Email</th><th>Plan</th><th>Change Plan</th><th>Msgs Today</th><th>Total Chats</th><th>Total Msgs</th><th>Joined</th></tr></thead>
+                <tbody id="adminUsersBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="adminTab-chats" style="display:none">
+            <h3 class="section-title">All User Chats — Console View</h3>
+            <div id="adminChatsContainer"></div>
+          </div>
+          <div id="adminTab-logs" style="display:none">
+            <h3 class="section-title">Activity Logs — Signups, Logins, Messages, Plan Changes</h3>
+            <div id="adminLogsContainer"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal-box">
+    <h3 id="qrPlanName">Upgrade Plan</h3>
+    <p id="qrPlanPrice">Scan to pay</p>
+    <div class="qr-placeholder" id="qrImage">QR Code<br>Coming Soon</div>
+    <p style="font-size:11px;color:var(--fg3);margin-bottom:16px">After payment, your plan will be activated manually by admin.</p>
+    <button class="close-modal" onclick="closeQR()">Close</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="infamous-ai.js"></script>
+</body>
+</html>
