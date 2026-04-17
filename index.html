@@ -6,6 +6,7 @@
 <title>Infamous AI — Dashboard</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <style>
+/* ===================== RESET & BASE ===================== */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;--bg4:#22223a;
@@ -516,7 +517,11 @@ input{font-family:inherit;outline:none}
     <button class="close-modal" onclick="closeQR()">Close</button>
   </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>
+/* ===================== SECTION: CONFIG ===================== */
 const _API_BASE=(function(){
   const id='pwmvfujxrfzzvsvnkkax';
   return 'https://'+id+'.supabase.co';
@@ -579,10 +584,10 @@ async function apiAdmin(action, extra = {}) {
 
 /* ===================== SECTION: PLANS DATA ===================== */
 const PLANS = [
-  { id: 'dirt', name: 'Dirt', icon: '🟫', msgs: 25, inr: 00, usd: 000, features: ['25 messages/day', 'Basic AI responses', '1 chat at a time', 'Community support'], popular: false },
-  { id: 'stone', name: 'Stone', icon: '🪨', msgs: 50, inr: 49, usd: 0.53, features: ['50 messages/day', 'Faster responses', '5 chats', 'Code highlighting', 'Priority queue'], popular: true },
-  { id: 'obsidian', name: 'Obsidian', icon: '🖤', msgs: 80, inr: 99, usd: 1.08, features: ['80 messages/day', 'Advanced code gen', '15 chats', 'Export chats', 'Priority support'], popular: false },
-  { id: 'bedrock', name: 'Bedrock', icon: '💎', msgs: 150, inr: 199, usd: 2.16, features: ['150 messages/day', 'Unlimited chats', 'GPT-level answers', 'API access', '24/7 support', 'Early features'], popular: false }
+  { id: 'dirt', name: 'Dirt', icon: '🟫', msgs: 25, inr: 69, usd: 0.82, features: ['25 messages/day', 'Basic AI responses', '1 chat at a time', 'Community support'], popular: false },
+  { id: 'stone', name: 'Stone', icon: '🪨', msgs: 50, inr: 149, usd: 1.77, features: ['50 messages/day', 'Faster responses', '5 chats', 'Code highlighting', 'Priority queue'], popular: true },
+  { id: 'obsidian', name: 'Obsidian', icon: '🖤', msgs: 80, inr: 229, usd: 2.72, features: ['80 messages/day', 'Advanced code gen', '15 chats', 'Export chats', 'Priority support'], popular: false },
+  { id: 'bedrock', name: 'Bedrock', icon: '💎', msgs: 150, inr: 299, usd: 3.56, features: ['150 messages/day', 'Unlimited chats', 'GPT-level answers', 'API access', '24/7 support', 'Early features'], popular: false }
 ];
 
 /* ===================== SECTION: STATE ===================== */
@@ -668,7 +673,6 @@ async function handleAuth(e) {
 function loginAs(user) {
   currentUser = user;
   localStorage.setItem('iai_session', JSON.stringify({ token: _sessionToken }));
-  // Admin UI — only show if server says isAdmin
   const adminBtn = document.getElementById('adminNavBtn');
   const adminSection = document.getElementById('adminSection');
   if (adminBtn) adminBtn.style.display = user.isAdmin === true ? 'flex' : 'none';
@@ -1077,6 +1081,5 @@ function addCopyButtons() {
 /* ===================== SECTION: INIT ===================== */
 checkSession();
 </script>
-
 </body>
 </html>
